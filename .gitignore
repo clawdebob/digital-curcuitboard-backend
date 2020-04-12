@@ -9,3 +9,5 @@ node_modules/
 
 # User tokens folder
 tokens/
+
+package-lock.json
