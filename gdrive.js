@@ -1,5 +1,6 @@
 const {google} = require('googleapis');
 const fs = require('fs');
+const clients = require('./mongodb-client');
 
 const SCOPES = [
     'https://www.googleapis.com/auth/drive',
@@ -19,14 +20,17 @@ module.exports = {
     oAuth2Client: null,
     driveBuffer: {},
     init() {
-        fs.readFile('credentials.json', (err, content) => {
-            if (err) return console.log('Error loading client secret file:', err);
-            credentials = JSON.parse(content).installed;
+        clients.tryConnect().then(() => {
+            fs.readFile('credentials.json', (err, content) => {
+                if (err) return console.log('Error loading client secret file:', err);
+                credentials = JSON.parse(content).installed;
+            });
+        }, (err) => {
+            throw err;
         });
     },
     sendCode(code, sessionId) {
         const {oAuth2Client} = this.driveBuffer[sessionId];
-        const TOKEN_PATH = `./tokens/${sessionId}.json`;
 
         return new Promise((resolve) => {
             oAuth2Client.getToken(code, (err, token) => {
@@ -42,19 +46,10 @@ module.exports = {
 
                     const auth = oAuth2Client;
 
-                    try {
-                        fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
-                    } catch (e) {
-                        error = e;
-                        console.log('Error writing to file');
-                    }
-
-                    if(error) {
-                        resolve({
-                            status: 'error',
-                            error: 'Error writing to file'
-                        });
-                    } else {
+                    clients.addUser({
+                        ...token,
+                        sessionId
+                    }).then(() => {
                         this.driveBuffer[sessionId].drive = google.drive({version: 'v3', auth});
                         this.getUserData(this.driveBuffer[sessionId].drive)
                             .then((user) => {
@@ -69,7 +64,12 @@ module.exports = {
                                     });
                                 }
                             });
-                    }
+                    }, () => {
+                        resolve({
+                            status: 'error',
+                            error: 'Error accessing database'
+                        });
+                    });
                 }
             });
         });
@@ -81,47 +81,43 @@ module.exports = {
         });
     },
     authorize(sessionId) {
-        let token = null;
         const session = new Session();
 
         this.driveBuffer[sessionId] = session;
 
         return new Promise((resolve) => {
-            try {
-                token = JSON.parse(fs.readFileSync(`./tokens/${sessionId}.json`, 'utf8'));
-            } catch (e) {
-                console.log('File not found, creating new session data');
-            }
+            clients.getUser(sessionId)
+                .then((token) => {
+                    if(token) {
+                        session.oAuth2Client.setCredentials(token);
 
-            if(token) {
-                session.oAuth2Client.setCredentials(token);
+                        const auth = session.oAuth2Client;
 
-                const auth = session.oAuth2Client;
+                        session.drive = google.drive({version: 'v3', auth});
 
-                session.drive = google.drive({version: 'v3', auth});
-
-                this.getUserData(session.drive).then((user) => {
-                    if(user) {
-                        resolve({
-                            status: 'success',
-                            user
-                        });
-                    } else {
-                        resolve({
-                            status: 'error'
+                        this.getUserData(session.drive).then((user) => {
+                            if(user) {
+                                resolve({
+                                    status: 'success',
+                                    user
+                                });
+                            } else {
+                                resolve({
+                                    status: 'error'
+                                });
+                            }
+                        }, () => {
+                            resolve({
+                                status: 'error'
+                            });
                         });
                     }
                 }, () => {
                     resolve({
-                        status: 'error'
+                        status: 'needAuth',
+                        link: this.getAccessUrl(this.driveBuffer[sessionId].oAuth2Client)
                     });
                 });
-            } else {
-                resolve({
-                    status: 'needAuth',
-                    link: this.getAccessUrl(this.driveBuffer[sessionId].oAuth2Client)
-                });
-            }
         });
     },
     logout(sessionId) {
@@ -129,17 +125,16 @@ module.exports = {
 
         return new Promise((resolve) => {
             delete this.driveBuffer[sessionId];
-            fs.unlink(TOKEN_PATH, (err) => {
-                if (err) {
-                    resolve({
-                        status: 'error'
-                    });
-                } else {
+            clients.deleteUser(sessionId)
+                .then(() => {
                     resolve({
                         status: 'success'
                     });
-                }
-            });
+                }, () => {
+                    resolve({
+                        status: 'error'
+                    });
+                });
         });
     },
     getUserData(drive) {
