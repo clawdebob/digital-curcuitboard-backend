@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/static/css/main.672b9684.chunk.css",
+    "main.js": "/static/js/main.350266e8.chunk.js",
+    "main.js.map": "/static/js/main.350266e8.chunk.js.map",
+    "runtime~main.js": "/static/js/runtime~main.1e988f3f.js",
+    "runtime~main.js.map": "/static/js/runtime~main.1e988f3f.js.map",
+    "static/js/2.d4c4ec98.chunk.js": "/static/js/2.d4c4ec98.chunk.js",
+    "static/js/2.d4c4ec98.chunk.js.map": "/static/js/2.d4c4ec98.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.a9c3919e2c1c1368db6947fefb55e1aa.js": "/precache-manifest.a9c3919e2c1c1368db6947fefb55e1aa.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/main.672b9684.chunk.css.map": "/static/css/main.672b9684.chunk.css.map",
+    "static/media/and.svg": "/static/media/and.3082a1bb.svg",
+    "static/media/buffer.svg": "/static/media/buffer.ed9f6d1b.svg",
+    "static/media/button.svg": "/static/media/button.7c4fae13.svg",
+    "static/media/const.svg": "/static/media/const.ff0935a2.svg",
+    "static/media/dcb-logo.eec317a6.svg": "/static/media/dcb-logo.eec317a6.svg",
+    "static/media/invertor.svg": "/static/media/invertor.590f4c64.svg",
+    "static/media/nand.svg": "/static/media/nand.90156a5e.svg",
+    "static/media/nor.svg": "/static/media/nor.b0df7711.svg",
+    "static/media/nxor.svg": "/static/media/nxor.a94b65d4.svg",
+    "static/media/or.svg": "/static/media/or.d1e550b4.svg",
+    "static/media/out-contact.svg": "/static/media/out-contact.f2004e70.svg",
+    "static/media/xor.svg": "/static/media/xor.24ce4487.svg"
+  }
+}

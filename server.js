@@ -1,17 +1,22 @@
 const express = require('express');
+const process = require('process');
+const path = require('path');
 const cors = require('cors');
 const gdrive = require('./gdrive');
 const bodyParser = require('body-parser');
 const app = express();
 const port = 3030;
 
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true,
     limit: '4mb'
 }));
+app.use(express.static('public'));
 
+app.get('/', (request, response) => {
+    response.sendFile('index.html', {root: path.join(__dirname, './public')});
+});
 
 app.post('/logout', (request, response) => {
     const {sessionId} = request.body;
@@ -69,6 +74,11 @@ app.post('/auth', (request, response) => {
         .then((data) => response.send(data));
 });
 
+if(process.env.NODE_ENV === 'development') {
+    console.log('Development mode');
+    app.use(cors());
+}
+
 app.listen(port, (err) => {
     if (err) {
         return console.log('Error launching server', err);
@@ -76,3 +86,4 @@ app.listen(port, (err) => {
     gdrive.init();
     console.log(`server is listening on ${port}`);
 });
+
